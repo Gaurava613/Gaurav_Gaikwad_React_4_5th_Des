@@ -1,113 +1,78 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import axios from 'axios';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-const createContextProvider=createContext()
+const ContextProvider = createContext();
 
-function UserList(){
+const Home = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate(); // Add this line to get the navigate function
 
-    const [users,setUsers]=useState([]);
-    const[isLoading,setIsLoading]=useState(true)
-    const [error,setError]=useState(null)
-    const[userId,setUserId]=useState()
-    const[id,setId]=useState()
-    const[title,setTitle]=useState()
-    const[body,setBody]=useState()
-    const [img,setImg]=useState()
-    
-    const getData=async()=>{
-        try {
-            const resp = await axios.get('https://jsonplaceholder.typicode.com/posts');
+  const getData = async () => {
+    try {
+      const resp = await fetch('https://jsonplaceholder.typicode.com/posts');
+      const data = await resp.json();
 
-            console.log(resp.data);
-
-            setTimeout(()=>{
-            setUsers(resp.data);
-            setImg(<img src="https://fastly.picsum.photos/id/324/200/200.jpg?hmac=qhw4ORwk8T1r-Rxd2QREZORSVvc6l_R1S6F3Pl9mR_c"style={{width:'100%'}} />)
-            setIsLoading(false)
-
-        },2000)
-        } catch (error) {
-            console.log(error);
-            setError(error)
-            setIsLoading(false)
-
-            
-        }
+      setTimeout(() => {
+        setUser(data);
+        setIsLoading(false);
+      }, 2000);
+    } catch (error) {
+      setError(error);
+      setIsLoading(false);
     }
+  };
 
-    const clickForDetailPage=()=>{
-    //   setImg(img)
-    //  setUserId(userId)  
-    //  setId(id)
-    //  setTitle(title)
-    //  setBody(body)
-    //  window.location.href='./components/details'
+  useEffect(() => {
+    getData();
+  }, []);
 
-    console.log(userId,id)
-     }
+  function getDetailsAndNavigate(item) {
+    // Save the data to localStorage or a global state for access in the Details component
+    localStorage.setItem('selectedItem', JSON.stringify(item));
+    
+    // Navigate to the details page
+    navigate('/detail');
+  }
 
-
-    useEffect(()=>{
-        getData(); //function call when component loads for the very first time
-    },[]);
-
-    return (
-        <createContextProvider.Provider value={{users,img,userId,id,title,body}} >
-    <div>
-        <h2> All Items </h2>
-            
-            {isLoading ?(<div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading......</span>
-            </div>):(error ?(<p>Error: {error.message}</p>):<p> {
-                    users.map((item)=>{
-                        
-                        return (
-                            <div>
-    {isLoading ? (
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading......</span>
-      </div>
-    ) : (
-      error ? (
-        <p>Error: {error.message}</p>
-      ) : (
-        <div className="container">
-          <div className="row row-cols-1 row-cols-md-4 g-4 text-start">
-            {users.map((item) => (
-              <div key={item.id} className="col">
-                <div className="card">
-                  <div className="card-body">
-                    {/* <img src="https://fastly.picsum.photos/id/324/200/200.jpg?hmac=qhw4ORwk8T1r-Rxd2QREZORSVvc6l_R1S6F3Pl9mR_c"style={{width:'100%'}} ></img> */}
-                    {img}
-                  <h5 className="card-title" onChange={(e)=>setUserId(e.target.value)} >User ID : {item.userId}</h5>
-                  <h6 className="card-text" onChange={(e)=>setId(e.target.value)}  >ID : {item.id}</h6>
-                    <h5 className="card-title" onChange={(e)=>setTitle(e.target.value)}  >Title :  {item.title.slice(0,20)}{item.body.length > 100 && '... '}</h5>
-                    <p className="card-text" onChange={(e)=>setBody(e.target.value)} >Body : {item.body.slice(0, 70)}{item.body.length > 100 && '... '}
-                      <Link to={`/item/${item.id}`} onClick={clickForDetailPage} >Read More</Link>
-                    </p>
+  return (
+    <ContextProvider.Provider value={{ user, getDetailsAndNavigate }}>
+      {children}
+      <div>
+        <h1>Home</h1>
+        {isLoading ? (
+          <div>Loading....</div>
+        ) : error ? (
+          <div>{error}</div>
+        ) : (
+          <div className="container">
+            <div className="row row-cols-1 row-cols-md-4 g-4 text-start">
+              {user.map((item) => (
+                <div key={item.id} className="col">
+                  <div className="card">
+                    <div className="card-body">
+                      <img src="https://fastly.picsum.photos/id/324/200/200.jpg?hmac=qhw4ORwk8T1r-Rxd2QREZORSVvc6l_R1S6F3Pl9mR_c" style={{ width: '100%' }} alt="Card" />
+                      <h5 className="card-title">User ID : {item.userId}</h5>
+                      <h6 className="card-text">ID : {item.id}</h6>
+                      <h5 className="card-title">Title : {item.title.slice(0, 20)}{item.body.length > 100 && '... '}</h5>
+                      <p className="card-text">Body : {item.body.slice(0, 70)}{item.body.length > 100 && '... '}
+                        <a onClick={() => getDetailsAndNavigate(item)}>Read More</a>
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-          
-          ))}
+              ))}
+            </div>
           </div>
-        </div>
-        
-      )
-    )}
-  </div>
-        )
-                    })
-                }</p>)}
-           
-    </div>
-    </createContextProvider.Provider>
-    )
-    
-}
-export default UserList;
+        )}
+      </div>
+    </ContextProvider.Provider>
+  );
+};
 
-export const Context=()=>{
-  return useContext(createContextProvider)
-}
+export default Home;
+
+export const UseContextProvider = () => {
+  return useContext(ContextProvider);
+};
