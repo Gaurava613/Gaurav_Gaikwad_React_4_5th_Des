@@ -7,7 +7,7 @@ const Home = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const navigate = useNavigate(); // Add this line to get the navigate function
+  const navigate = useNavigate(); 
 
   const getData = async () => {
     try {
@@ -29,10 +29,8 @@ const Home = ({ children }) => {
   }, []);
 
   function getDetailsAndNavigate(item) {
-    // Save the data to localStorage or a global state for access in the Details component
     localStorage.setItem('selectedItem', JSON.stringify(item));
     
-    // Navigate to the details page
     navigate('/detail');
   }
 
